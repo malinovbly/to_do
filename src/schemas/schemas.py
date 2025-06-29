@@ -7,7 +7,7 @@ from uuid import UUID
 
 
 class NewUser(BaseModel):
-    name: pydantic.constr(min_length=3)
+    name: pydantic.constr(min_length=5)
 
 
 class UserRole(str, Enum):
@@ -26,6 +26,12 @@ class TaskImportance(str, Enum):
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
+
+
+class NewTask(BaseModel):
+    name: str
+    description: str
+    importance: TaskImportance
 
 
 class Task(BaseModel):
