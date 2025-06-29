@@ -208,3 +208,7 @@ __marimo__/
 
 # IDE directory
 .idea
+
+# DB sqlite
+/src/db.db
+/src/database/db.db
