@@ -7,10 +7,8 @@ services:
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres4351
-      POSTGRES_DB: app_db
+    env_file:
+      - .env
     ports:
       - "5432:5432"
 
@@ -19,8 +17,8 @@ services:
     command: [ "/wait-for-it.sh", "db:5432", "--", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
     working_dir: /app/src
     container_name: fastapi
-    environment:
-      DATABASE_URL: postgresql+psycopg2://postgres:postgres4351@db:5432/app_db
+    env_file:
+      - .env
     ports:
       - "8000:8000"
     depends_on:

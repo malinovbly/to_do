@@ -2,7 +2,7 @@
 from sqlalchemy import Column, String, Enum as SqlEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-import uuid
+from uuid import uuid4
 
 from src.schemas.schemas import UserRole
 from src.database.database import Base
@@ -11,9 +11,11 @@ from src.database.database import Base
 class UserModel(Base):
     __tablename__ = "user"
 
-    id = Column(UUID(as_uuid=True), unique=True, index=True, primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), unique=True, index=True, primary_key=True, default=uuid4)
     name = Column(String, nullable=False, unique=True)
     role = Column(SqlEnum(UserRole), default=UserRole.USER)
-    api_key = Column(UUID(as_uuid=True), nullable=False, unique=True, index=True)
+
+    password = Column(String, nullable=False)
+    salt = Column(String, nullable=False)
 
     tasks = relationship("TaskModel", back_populates="user", passive_deletes=True)

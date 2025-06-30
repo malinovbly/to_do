@@ -1,13 +1,18 @@
 # src/schemas/schemas.py
-import pydantic
-from pydantic import BaseModel
+from pydantic import BaseModel, constr
 from typing import Literal
 from enum import Enum
 from uuid import UUID
 
 
+MIN_USERNAME_LENGTH = 5
+MIN_PASSWORD_LENGTH = 8
+MAX_PASSWORD_LENGTH = 256
+
+
 class NewUser(BaseModel):
-    name: pydantic.constr(min_length=5)
+    name: constr(min_length=MIN_USERNAME_LENGTH)
+    password: constr(min_length=MIN_PASSWORD_LENGTH, max_length=MAX_PASSWORD_LENGTH)
 
 
 class UserRole(str, Enum):
@@ -19,7 +24,18 @@ class User(BaseModel):
     id: UUID
     name: str
     role: UserRole
-    api_key: UUID
+    salt: str
+    password: str
+
+
+class LoginData(BaseModel):
+    name: constr(min_length=MIN_USERNAME_LENGTH)
+    password: constr(min_length=MIN_PASSWORD_LENGTH, max_length=MAX_PASSWORD_LENGTH)
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
 
 class TaskImportance(str, Enum):
