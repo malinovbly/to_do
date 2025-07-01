@@ -4,6 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from pathlib import Path
 
+from fastapi.middleware.cors import CORSMiddleware
+
 from src import models
 from src.api import main_router
 from src.database.database import Base, engine, get_db
@@ -20,6 +22,14 @@ FAVICON_PATH = './static/favicon.ico'
 app = FastAPI(openapi_tags=GLOBAL_TAGS)
 app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 app.include_router(main_router)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # или ["http://127.0.0.1:5500"]
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.on_event("startup")

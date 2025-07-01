@@ -1,6 +1,5 @@
 # src/api/user.py
 from fastapi import APIRouter, Depends
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from src.database.database import get_db
