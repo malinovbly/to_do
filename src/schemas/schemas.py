@@ -29,8 +29,8 @@ class User(BaseModel):
 
 
 class LoginData(BaseModel):
-    name: constr(min_length=MIN_USERNAME_LENGTH)
-    password: constr(min_length=MIN_PASSWORD_LENGTH, max_length=MAX_PASSWORD_LENGTH)
+    name: str
+    password: str
 
 
 class Token(BaseModel):

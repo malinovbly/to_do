@@ -1,43 +1,35 @@
 # src/utils.py
-from fastapi.security import HTTPAuthorizationCredentials
 from fastapi import HTTPException, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from uuid import uuid4
-from os import urandom
-from hashlib import pbkdf2_hmac
-from base64 import b64encode, b64decode
 from jose import jwt, JWTError
-from datetime import datetime, timedelta, timezone
 
-from src.config.settings import settings
-from src.models.user import UserModel
-from src.security import security
 from src.database.database import get_db
-from src.schemas.schemas import NewUser, UserRole, LoginData, Token, MAX_PASSWORD_LENGTH
-
-
-SALT_LENGTH = 10
+from src.security import oauth2_scheme
+from src.models.user import UserModel
+from src.schemas.schemas import NewUser, UserRole, LoginData, User
+from src.hash_password import HashPassword
+from src.config.settings import settings
 
 
 # user
-def create_user(user: NewUser, db: Session):
+def create_user(user: NewUser, db: Session) -> User:
     try:
         check_username(user, db)
-
-        db_password, db_salt = hash_password(user.password)
-
-        db_user = UserModel(
-            id=uuid4(),
-            name=user.name,
-            role=UserRole.USER,
-            password=db_password,
-            salt=db_salt
-        )
+        new_user_password, new_user_salt = HashPassword.hash_password(user.password)
+        new_user = {
+            "id": uuid4(),
+            "name": user.name,
+            "role": UserRole.USER,
+            "password": new_user_password,
+            "salt": new_user_salt
+        }
+        db_user = UserModel(**new_user)
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
-        return db_user
+        return User(**new_user)
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -55,108 +47,56 @@ def check_username(user: NewUser, db: Session):
         raise HTTPException(status_code=409, detail="Username already exists")
 
 
-def login_user(data: LoginData, db: Session):
-    db_user = get_user_by_name(data.username, db)
-    if not verify_password(db_user, data.password):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    token = create_jwt_token(db_user.id)
-    return Token(access_token=token, token_type="bearer")
-
-
-def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
-):
-    token = credentials.credentials
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-        user_id = payload.get("sub")
-        return get_user_by_id(user_id, db)
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-
-def get_user_by_name(name: str, db: Session):
-    db_user = db.execute(
-        select(UserModel).filter_by(name=name)
-    ).scalar_one_or_none()
-
-    if db_user is None:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    return db_user
-
-
-def get_user_by_id(user_id: str, db: Session):
-    db_user = db.execute(
-        select(UserModel).filter_by(id=user_id)
-    ).scalar_one_or_none()
-
-    if db_user is None:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    return db_user
+def get_user(db: Session, user_id: str = None, name: str = None):
+    if user_id is not None:
+        return db.execute(select(UserModel).filter_by(id=user_id)).scalar_one_or_none()
+    if name is not None:
+        return db.execute(select(UserModel).filter_by(name=name)).scalar_one_or_none()
 
 
 # admin
-def user_is_admin(api_key: str, db: Session):
+def user_is_admin(db: Session):
     ...
 
 
-def delete_user_by_id(user_id: str, db: Session):
+def delete_user(db: Session, user_id: str = None, name: str = None):
     ...
+
+
+# auth
+def get_current_user(
+        token: str = Depends(oauth2_scheme),
+        db: Session = Depends(get_db)
+) -> User:
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"}
+    )
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    db_user = get_user(db, user_id=user_id)
+    if db_user is None:
+        raise credentials_exception
+    return User(
+        id=db_user.id,
+        name=db_user.name,
+        role=db_user.role,
+        password=db_user.password,
+        salt=db_user.salt
+    )
+
+
+def authenticate_user(data: LoginData, db: Session) -> UserModel:
+    db_user = get_user(db, name=data.name)
+    if (db_user is None) or (not HashPassword.verify(db_user, data.password)):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    return db_user
 
 
 # task
-
-
-# password
-def hash_password(password: str):
-    if len(password) > MAX_PASSWORD_LENGTH:
-        raise HTTPException(status_code=400, detail="Password too long. Maximum allowed length is 256 characters")
-
-    salt = urandom(SALT_LENGTH)
-    key = pbkdf2_hmac(
-        hash_name='sha256',
-        password=password.encode('utf-8'),
-        salt=salt,
-        iterations=100_000
-    )
-
-    encoded_key = b64encode(key).decode("utf-8")
-    encoded_salt = b64encode(salt).decode("utf-8")
-
-    return encoded_key, encoded_salt
-
-
-def verify_password(db_user: UserModel, raw_password: str):
-    decoded = decode_password(db_user.password, db_user.salt)
-    real_key = decoded[0]
-    salt = decoded[1]
-
-    test_key = pbkdf2_hmac(
-        hash_name='sha256',
-        password=raw_password.encode(),
-        salt=salt,
-        iterations=100_000
-    )
-
-    return test_key == real_key
-
-
-def decode_password(password: str, salt: str):
-    decoded_password = b64decode(password)
-    decoded_salt = b64decode(salt)
-    return decoded_password, decoded_salt
-
-
-# JWT
-def create_jwt_token(user_id: str) -> str:
-    expire = datetime.now(tz=timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    payload = {
-        "sub": str(user_id),
-        "exp": expire
-    }
-    token = jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
-    return token

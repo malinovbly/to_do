@@ -6,7 +6,7 @@ from uuid import uuid4
 from src.models.user import UserModel
 from src.schemas.schemas import UserRole
 from src.config.settings import settings
-from src.utils import hash_password
+from src.hash_password import HashPassword
 
 
 def create_admin(db: Session):
@@ -15,7 +15,7 @@ def create_admin(db: Session):
     ).scalar_one_or_none()
 
     if db_admin is None:
-        hashed = hash_password(settings.ADMIN_PASSWORD)
+        hashed = HashPassword.hash_password(settings.ADMIN_PASSWORD)
         new_admin = UserModel(
             id=uuid4(),
             name="admin",
