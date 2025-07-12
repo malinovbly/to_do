@@ -13,7 +13,7 @@ class TaskModel(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     name = Column(String, nullable=False)
-    description = Column(String, nullable=True)
+    description = Column(String, nullable=False, default="")
     importance = Column(SqlEnum(TaskImportance), default=TaskImportance.LOW)
     is_completed = Column(Boolean, default=False)
 

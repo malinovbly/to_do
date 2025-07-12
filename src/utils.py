@@ -69,6 +69,8 @@ def delete_user_from_db(db: Session, user_id: str = None, name: str = None):
 
 # task
 def create_task_in_db(db: Session, user: User, new_task: NewTask):
+    if new_task.description is None:
+        new_task.description = ""
     db_task = TaskModel(
         id=uuid4(),
         name=new_task.name,
