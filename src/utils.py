@@ -2,6 +2,7 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
+from sqlalchemy.exc import IntegrityError
 from uuid import uuid4, UUID
 
 from src.models.task import TaskModel
@@ -12,23 +13,26 @@ from src.hash_password import HashPassword
 
 # user
 def create_user_in_db(db: Session, user: NewUser):
-    try:
-        check_username(user, db)
-        new_user_password, new_user_salt = HashPassword.hash_password(user.password)
-        db_user = UserModel(
-            id=uuid4(),
-            name=user.name,
-            role=UserRole.USER,
-            password=new_user_password,
-            salt=new_user_salt
-        )
-        db.add(db_user)
-        db.commit()
-        db.refresh(db_user)
-        return db_user
+    check_username(user, db)
+    new_user_password, new_user_salt = HashPassword.hash_password(user.password)
 
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    db_user = UserModel(
+        id=uuid4(),
+        name=user.name,
+        role=UserRole.USER,
+        password=new_user_password,
+        salt=new_user_salt
+    )
+    db.add(db_user)
+
+    try:
+        db.commit()
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(status_code=409, detail=f"User with such data already exists. DB error: {e.orig}")
+
+    db.refresh(db_user)
+    return db_user
 
 
 def check_username(user: NewUser, db: Session):
@@ -65,8 +69,6 @@ def delete_user_from_db(db: Session, user_id: str = None, name: str = None):
 
 # task
 def create_task_in_db(db: Session, user: User, new_task: NewTask):
-    if new_task.description is None:
-        new_task.description = ""
     db_task = TaskModel(
         id=uuid4(),
         name=new_task.name,
@@ -75,7 +77,16 @@ def create_task_in_db(db: Session, user: User, new_task: NewTask):
         user_id=user.id
     )
     db.add(db_task)
-    db.commit()
+
+    try:
+        db.commit()
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail=f"Could not create task due to a database integrity error. Check if related data exists. DB error: {e.orig}"
+        )
+
     db.refresh(db_task)
     return db_task
 

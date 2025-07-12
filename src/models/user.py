@@ -11,7 +11,7 @@ from src.database.database import Base
 class UserModel(Base):
     __tablename__ = "user"
 
-    id = Column(UUID(as_uuid=True), unique=True, index=True, primary_key=True, default=uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     name = Column(String, nullable=False, unique=True)
     role = Column(SqlEnum(UserRole), default=UserRole.USER)
 

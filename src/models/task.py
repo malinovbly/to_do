@@ -11,7 +11,7 @@ from src.database.database import Base
 class TaskModel(Base):
     __tablename__ = "task"
 
-    id = Column(UUID(as_uuid=True), unique=True, index=True, primary_key=True, default=uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
     importance = Column(SqlEnum(TaskImportance), default=TaskImportance.LOW)
