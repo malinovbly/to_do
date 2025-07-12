@@ -1,10 +1,9 @@
 # src/config/settings.py
 from pydantic_settings import BaseSettings
-from pathlib import Path
+from dotenv import find_dotenv, load_dotenv
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-ENV_PATH = BASE_DIR / ".env"
+load_dotenv(find_dotenv())
 
 
 class Settings(BaseSettings):
@@ -20,7 +19,7 @@ class Settings(BaseSettings):
     ADMIN_PASSWORD: str
 
     class Config:
-        env_file = str(ENV_PATH)
+        env_file = ".env"
         env_file_encoding = "utf-8"
 
 

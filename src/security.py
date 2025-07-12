@@ -32,7 +32,7 @@ def create_jwt_token(user_id: str) -> str:
 def get_current_user(
         token: str = Depends(oauth2_scheme),
         db: Session = Depends(get_db)
-) -> User:
+) -> UserModel:
     credentials_exception = HTTPException(
         status_code=400,
         detail="Invalid credentials",
@@ -48,16 +48,10 @@ def get_current_user(
     db_user = get_user(db, user_id=user_id)
     if db_user is None:
         raise credentials_exception
-    return User(
-        id=db_user.id,
-        name=db_user.name,
-        role=db_user.role,
-        password=db_user.password,
-        salt=db_user.salt
-    )
+    return db_user
 
 
-def authenticate_user(data: LoginData, db: Session) -> UserModel:
+def authenticate_user(db: Session, data: LoginData) -> UserModel:
     db_user = get_user(db, name=data.name)
     if (db_user is None) or (not HashPassword.verify(db_user, data.password)):
         raise HTTPException(status_code=400, detail="Invalid credentials")

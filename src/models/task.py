@@ -1,5 +1,5 @@
 # src/models/task.py
-from sqlalchemy import Column, String, ForeignKey, Enum as SqlEnum
+from sqlalchemy import Column, String, ForeignKey, Boolean, Enum as SqlEnum
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from uuid import uuid4
@@ -15,6 +15,7 @@ class TaskModel(Base):
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
     importance = Column(SqlEnum(TaskImportance), default=TaskImportance.LOW)
+    is_completed = Column(Boolean, default=False)
 
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.id", ondelete="CASCADE"), index=True, nullable=False)
 

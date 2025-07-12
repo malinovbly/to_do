@@ -1,6 +1,6 @@
 # src/schemas/schemas.py
 from pydantic import BaseModel, constr
-from typing import Literal
+from typing import Literal, Optional
 from enum import Enum
 from uuid import UUID
 
@@ -46,8 +46,8 @@ class TaskImportance(str, Enum):
 
 class NewTask(BaseModel):
     name: str
-    description: str
-    importance: TaskImportance
+    description: Optional[str] = None
+    importance: TaskImportance = TaskImportance.LOW
 
 
 class Task(BaseModel):
@@ -55,6 +55,7 @@ class Task(BaseModel):
     name: str
     description: str
     importance: TaskImportance
+    is_completed: bool
 
 
 class Ok(BaseModel):
