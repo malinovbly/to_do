@@ -7,6 +7,7 @@ from src.models.user import UserModel
 from src.schemas.schemas import UserRole
 from src.config.settings import settings
 from src.hash_password import HashPassword
+from src.database.database import get_db
 
 
 def create_admin(db: Session):
@@ -25,6 +26,16 @@ def create_admin(db: Session):
         )
         db.add(new_admin)
         db.commit()
-        print("Admin created")
+        print("--- Admin created ---")
     else:
-        print("Admin already exists")
+        print("--- Admin already exists ---")
+
+
+def run_db_creation_sync():
+    print("--- Checking for Admin ---")
+    db = next(get_db())
+    try:
+        create_admin(db)
+    finally:
+        db.close()
+    print("--- Admin check complete ---")

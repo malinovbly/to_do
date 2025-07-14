@@ -2,12 +2,14 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
+from starlette.concurrency import run_in_threadpool
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from src import models
 from src.api import main_router
-from src.database.database import Base, engine, get_db
-from src.database.init_data import create_admin
+from src.database.database import Base, engine
+from src.database.init_data import run_db_creation_sync
 
 
 GLOBAL_TAGS = [
@@ -17,18 +19,16 @@ GLOBAL_TAGS = [
 ]
 FAVICON_PATH = './static/favicon.ico'
 
-app = FastAPI(openapi_tags=GLOBAL_TAGS)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await run_in_threadpool(run_db_creation_sync)
+    yield
+
+
+app = FastAPI(openapi_tags=GLOBAL_TAGS, lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 app.include_router(main_router)
-
-
-@app.on_event("startup")
-def create_admin_if_not_exists():
-    db = next(get_db())
-    try:
-        create_admin(db)
-    finally:
-        db.close()
 
 
 @app.get('/favicon.ico', include_in_schema=False)
