@@ -6,10 +6,10 @@ from starlette.concurrency import run_in_threadpool
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from src import models
 from src.api import main_router
 from src.database.database import Base, engine
 from src.database.init_data import run_db_creation_sync
+from src import models
 
 
 GLOBAL_TAGS = [
@@ -17,7 +17,8 @@ GLOBAL_TAGS = [
     {"name": "task"},
     {"name": "user"}
 ]
-FAVICON_PATH = './static/favicon.ico'
+FAVICON_PATH = "./static/favicon.ico"
+API_TITLE = "To do"
 
 
 @asynccontextmanager
@@ -26,7 +27,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(openapi_tags=GLOBAL_TAGS, lifespan=lifespan)
+app = FastAPI(title=API_TITLE, openapi_tags=GLOBAL_TAGS, lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 app.include_router(main_router)
 

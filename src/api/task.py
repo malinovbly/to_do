@@ -4,10 +4,10 @@ from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
 
-from src.models.user import UserModel
-from src.schemas.schemas import NewTask, Task, Ok
 from src.database.database import get_db
 from src.security import get_current_user
+from src.models import UserModel
+from src.schemas import NewTask, Task, Ok
 from src.utils import create_task_in_db, get_task_from_db, delete_task_from_db
 
 

@@ -2,10 +2,10 @@
 from fastapi import HTTPException
 from hashlib import pbkdf2_hmac
 from base64 import b64encode, b64decode
-from src.schemas.schemas import MAX_PASSWORD_LENGTH
 from os import urandom
 
-from src.models.user import UserModel
+from src.models import UserModel
+from src.schemas import MAX_PASSWORD_LENGTH
 
 
 SALT_LENGTH = 10

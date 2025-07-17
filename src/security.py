@@ -5,12 +5,12 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
 
-from src.config.settings import settings
 from src.database.database import get_db
-from src.schemas.schemas import User, LoginData
-from src.models.user import UserModel
-from src.utils import get_user
+from src.config.settings import settings
 from src.hash_password import HashPassword
+from src.models import UserModel
+from src.schemas import LoginData
+from src.utils import get_user
 
 
 # OAuth2

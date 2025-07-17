@@ -4,8 +4,8 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from uuid import uuid4
 
-from src.schemas.schemas import TaskImportance
 from src.database.database import Base
+from src.schemas import TaskImportance
 
 
 class TaskModel(Base):

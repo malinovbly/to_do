@@ -3,11 +3,11 @@ from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from uuid import uuid4
 
-from src.models.user import UserModel
-from src.schemas.schemas import UserRole
+from src.database.database import get_db
 from src.config.settings import settings
 from src.hash_password import HashPassword
-from src.database.database import get_db
+from src.models import UserModel
+from src.schemas import UserRole
 
 
 def create_admin(db: Session):
