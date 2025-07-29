@@ -50,6 +50,13 @@ class NewTask(BaseModel):
     importance: TaskImportance = TaskImportance.LOW
 
 
+class TaskUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    importance: Optional[TaskImportance] = None
+    is_completed: Optional[bool] = None
+
+
 class Task(BaseModel):
     id: UUID
     name: str

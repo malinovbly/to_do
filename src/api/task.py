@@ -4,11 +4,11 @@ from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
 
-from src.models.user import UserModel
-from src.schemas.schemas import NewTask, Task, Ok
 from src.database.database import get_db
 from src.security import get_current_user
-from src.utils import create_task_in_db, get_task_from_db, delete_task_from_db
+from src.models import UserModel
+from src.schemas import NewTask, Task, TaskUpdate, Ok
+from src.utils import create_task_in_db, get_task_from_db, update_task_data, delete_task_from_db
 
 
 router = APIRouter()
@@ -39,14 +39,14 @@ def get_task(
     return get_task_from_db(db, current_user, task_id)
 
 
-@router.put(path="/tasks/{task_id}", tags=["task"], response_model=Task)
-def change_task():
-    pass
-
-
-@router.post(path="/tasks/{task_id}", tags=["task"], response_model=Ok)
-def complete_task():
-    pass
+@router.patch(path="/tasks/{task_id}", tags=["task"], response_model=Task)
+def update_task(
+        task_id: UUID,
+        new_data: TaskUpdate,
+        current_user: UserModel = Depends(get_current_user),
+        db: Session = Depends(get_db)
+):
+    return update_task_data(db, current_user, new_data, task_id)
 
 
 @router.delete(path="/tasks/{task_id}", tags=["task"], response_model=Ok)

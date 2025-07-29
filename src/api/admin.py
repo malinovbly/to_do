@@ -3,9 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from src.database.database import get_db
-from src.schemas.schemas import User, UserRole, Ok
-from src.utils import delete_user_from_db
 from src.security import get_current_user
+from src.schemas import User, UserRole, Ok
+from src.utils import delete_user_from_db
 
 
 router = APIRouter()
