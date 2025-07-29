@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from src.schemas import Ok
-from src.utils import get_user
+from src.utils.user import get_user
 
 
 def delete_user_from_db(db: Session, user_id: str = None, name: str = None):

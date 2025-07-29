@@ -47,8 +47,8 @@ def check_username(user: NewUser, db: Session):
 def get_user(db: Session, user_id: str = None, name: str = None):
     try:
         if user_id is not None:
-            return db.execute(select(UserModel).filter_by(id=user_id)).scalar_one_or_none()
+            return db.query(UserModel).filter_by(id=user_id).first()
         elif name is not None:
-            return db.execute(select(UserModel).filter_by(name=name)).scalar_one_or_none()
+            return db.query(UserModel).filter_by(name=name).first()
     except Exception:
         raise HTTPException(status_code=400, detail="Bad request")

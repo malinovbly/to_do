@@ -6,12 +6,10 @@ from sqlalchemy.exc import IntegrityError
 from uuid import uuid4, UUID
 
 from src.models import TaskModel
-from src.schemas import User, Ok, NewTask
+from src.schemas import User, Ok, NewTask, TaskUpdate
 
 
 def create_task_in_db(db: Session, user: User, new_task: NewTask):
-    if new_task.description is None:
-        new_task.description = ""
     db_task = TaskModel(
         id=uuid4(),
         name=new_task.name,
@@ -35,12 +33,30 @@ def create_task_in_db(db: Session, user: User, new_task: NewTask):
 
 
 def get_task_from_db(db: Session, user: User, task_id: UUID):
-    db_task = db.execute(select(TaskModel).filter_by(id=task_id)).scalar_one_or_none()
+    db_task = db.query(TaskModel).filter_by(id=task_id).first()
     if db_task is None:
         raise HTTPException(status_code=404, detail="Task not found")
     if db_task.user_id != user.id:
         raise HTTPException(status_code=403, detail="Forbidden")
     return db_task
+
+
+def update_task_data(db: Session, user: User, new_data: TaskUpdate, task_id: UUID):
+    try:
+        db_task = get_task_from_db(db, user, task_id)
+
+        update_data = new_data.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(db_task, key, value)
+
+        db.commit()
+        db.refresh(db_task)
+        return db_task
+
+    except HTTPException as e:
+        raise e
+    except Exception:
+        raise HTTPException(status_code=400, detail="Bad request")
 
 
 def delete_task_from_db(db: Session, user: User, task_id: UUID):
