@@ -14,6 +14,7 @@ from src import models
 
 GLOBAL_TAGS = [
     {"name": "admin"},
+    {"name": "public"},
     {"name": "task"},
     {"name": "user"}
 ]
@@ -28,7 +29,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title=API_TITLE, openapi_tags=GLOBAL_TAGS, lifespan=lifespan)
-app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
+
+app.mount("/static", StaticFiles(directory=Path(__file__).resolve().parent / "static"), name="static")
+
 app.include_router(main_router)
 
 

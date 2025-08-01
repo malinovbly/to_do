@@ -8,6 +8,7 @@ from src.security import create_jwt_token, authenticate_user
 from src.schemas import NewUser, User, Token, LoginData
 from src.utils import create_user_in_db
 
+
 router = APIRouter()
 
 
